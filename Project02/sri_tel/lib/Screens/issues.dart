@@ -12,7 +12,7 @@ class Issues extends StatefulWidget {
 
 class _IssuesState extends State<Issues> {
   Future<List<Issue>>? issue;
-  String? issueText;
+  TextEditingController issueController = TextEditingController();
 
   @override
   void initState() {
@@ -26,105 +26,87 @@ class _IssuesState extends State<Issues> {
   }
 
   void addIssue() async {
-    if (issueText == null) return;
-    await context.read<AppState>().dio.post('/issue/create', data: {"userId": context.read<AppState>().user!.id, "messageContent": issueText, "state": false});
+    await context
+        .read<AppState>()
+        .dio
+        .post('/issue/create', data: {"userId": context.read<AppState>().user!.id, "messageContent": issueController.text, "state": false});
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: issue,
-        builder: (context, snapshot) => !snapshot.hasData
-            ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: CircularProgressIndicator(),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 16),
-                      child: Text('Loading...'),
-                    ),
-                  ],
-                ),
-              )
-            : Column(
+      future: issue,
+      builder: (context, snapshot) => !snapshot.hasData
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: snapshot.data?.length,
-                      itemBuilder: (context, index) => Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.fromLTRB(10, 0, 0, 10),
-                        child: Container(
-                          height: 20,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(snapshot.data![index].messageContent),
-                              snapshot.data![index].state
-                                  ? const Text(
-                                      'Closed',
-                                      style: TextStyle(color: Colors.red),
-                                    )
-                                  : const Text(
-                                      'Open',
-                                      style: TextStyle(color: Colors.green),
-                                    ),
-                            ],
-                          ),
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CircularProgressIndicator(),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 16),
+                    child: Text('Loading...'),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: snapshot.data?.length,
+                    itemBuilder: (context, index) => Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.fromLTRB(10, 0, 0, 10),
+                      child: Container(
+                        height: 20,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(snapshot.data![index].messageContent),
+                            snapshot.data![index].state
+                                ? const Text(
+                                    'Closed',
+                                    style: TextStyle(color: Colors.red),
+                                  )
+                                : const Text(
+                                    'Open',
+                                    style: TextStyle(color: Colors.green),
+                                  ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      issueText = await _showTextInputDialog(context);
-                      if (issueText != null) {
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: issueController,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Open Ticket',
+                        ),
+                      ),
+                    ),
+                    FloatingActionButton(
+                      onPressed: () {
                         setState(() {
-                          snapshot.data!.add(Issue(userId: context.read<AppState>().user!.id!, messageContent: issueText!));
+                          snapshot.data!.add(Issue(userId: context.read<AppState>().user!.id!, messageContent: issueController.text));
                         });
-                      }
-                    },
-                    child: Text('Open Ticket'),
-                  ),
-                ],
-              ));
+                        addIssue();
+                        issueController.clear();
+                      },
+                      child: const Icon(Icons.add),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+    );
   }
-}
-
-Future<String?> _showTextInputDialog(BuildContext context) async {
-  String inputText = '';
-
-  await showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text('Open Case'),
-        content: TextFormField(
-          decoration: InputDecoration(hintText: 'Enter your issue'),
-          onChanged: (text) {
-            inputText = text;
-          },
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(inputText);
-            },
-            child: Text('OK'),
-          ),
-        ],
-      );
-    },
-  );
 }

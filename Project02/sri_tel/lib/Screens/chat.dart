@@ -87,24 +87,23 @@ class _ChatSState extends State<ChatS> {
                       ),
                     ),
                   ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: ChatController,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'Message',
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: ChatController,
                           ),
                         ),
-                      ),
-                      FloatingActionButton(
-                        onPressed: () {
-                          addChat();
-                        },
-                        child: const Icon(Icons.send),
-                      ),
-                    ],
+                        IconButton(
+                          icon: Icon(Icons.send),
+                          onPressed: () {
+                            addChat();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ));
